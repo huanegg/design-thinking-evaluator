@@ -10,6 +10,10 @@ pinned: false
 # 💡 設計思考我最行 (Design Thinking Master)
 > 第二個 Hugging Face Space 作業：結合多模態 AI 與設計思考四度評量的純前端智慧教學輔助 Web App
 
+🔗 **專案連結**：
+- **GitHub 專案倉庫**：[https://github.com/huanegg/design-thinking-static](https://github.com/huanegg/design-thinking-static)
+- **Hugging Face Space 線上體驗**：[https://huggingface.co/spaces/huanegg/Design-thinking-evaluator](https://huggingface.co/spaces/huanegg/Design-thinking-evaluator)
+
 「設計思考我最行」是一款專為設計思考（Design Thinking）創新專題課程量身打造的智慧學習單評量與回饋系統。支援學習單拍照/圖片上傳、一鍵載入經典創客案例、多模態大模型智能分析、四向度雷達圖視覺化、擬真人聲語音講評，以及教師微調與 A4 學習檢核卡匯出列印。
 
 ---

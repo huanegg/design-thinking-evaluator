@@ -1,19 +1,632 @@
-<!doctype html>
-<html>
-	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width" />
-		<title>My static Space</title>
-		<link rel="stylesheet" href="style.css" />
-	</head>
-	<body>
-		<div class="card">
-			<h1>Welcome to your static Space!</h1>
-			<p>You can modify this app directly by editing <i>index.html</i> in the Files and versions tab.</p>
-			<p>
-				Also don't forget to check the
-				<a href="https://huggingface.co/docs/hub/spaces" target="_blank">Spaces documentation</a>.
-			</p>
-		</div>
-	</body>
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>💡 設計思考我最行 - 智慧學習單四維度評量系統</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Font Awesome CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Google Fonts: Noto Sans TC -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- 客製化樣式 -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="text-slate-800">
+
+  <!-- ================= 頁首 Header ================= -->
+  <header class="bg-white/90 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40 shadow-sm no-print">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-md shadow-indigo-200">
+          <i class="fa-solid fa-lightbulb text-xl"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+            設計思考我最行
+            <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
+              Static Space v2.0
+            </span>
+          </h1>
+          <p class="text-xs text-slate-500">專題探究與創客專用 · 學習單四維度智能評量與 A4 檢核卡匯出</p>
+        </div>
+      </div>
+
+      <!-- 右側資訊與模型狀態 -->
+      <div class="flex items-center flex-wrap gap-2.5">
+        <!-- 運作模式徽章 -->
+        <div id="mode-status-badge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+          <span class="pulse-dot"></span>
+          <span id="mode-status-text">智慧示範評估模式（免 Token 直接用）</span>
+        </div>
+
+        <!-- HF 設定切換按鈕 -->
+        <button id="toggle-settings-btn" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center gap-1.5 border border-slate-200">
+          <i class="fa-solid fa-sliders text-indigo-600"></i>
+          <span>模型與 API 設定</span>
+        </button>
+
+        <!-- HF Space 倉庫連結 -->
+        <a id="space-repo-link" href="#" target="_blank" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-indigo-50 hover:bg-indigo-100 text-indigo-700 transition flex items-center gap-1.5 border border-indigo-200">
+          <i class="fa-brands fa-github-alt"></i>
+          <span>Space 專案頁面</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- 折疊式 Hugging Face API 設定面板 -->
+    <div id="api-config-panel" class="hidden bg-slate-50 border-t border-slate-200 px-4 sm:px-6 lg:px-8 py-3.5 transition-all">
+      <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1 flex items-center justify-between">
+            <span>Inference 模型選擇</span>
+            <span class="text-slate-400 font-normal">多模態/語言模型</span>
+          </label>
+          <select id="model-select" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="Qwen/Qwen2.5-VL-7B-Instruct">Qwen/Qwen2.5-VL-7B-Instruct (推薦多模態視覺模型)</option>
+            <option value="meta-llama/Llama-3.2-11B-Vision-Instruct">meta-llama/Llama-3.2-11B-Vision-Instruct</option>
+            <option value="Qwen/Qwen2.5-72B-Instruct">Qwen/Qwen2.5-72B-Instruct (強效文字推理)</option>
+            <option value="custom">自訂 Hugging Face 模型 ID...</option>
+          </select>
+          <input type="text" id="custom-model-id" class="hidden mt-1.5 w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-700" placeholder="例如：Qwen/Qwen2-VL-7B-Instruct">
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1 flex items-center justify-between">
+            <span>Hugging Face Token (選填)</span>
+            <span class="text-emerald-600 font-medium"><i class="fa-solid fa-lock text-[10px]"></i> 僅暫存於當前瀏覽器</span>
+          </label>
+          <div class="relative">
+            <input type="password" id="hf-token-input" class="w-full bg-white border border-slate-300 rounded-lg pl-2.5 pr-8 py-1.5 text-xs font-mono text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="hf_xxxxxxxxxxxxxxxx">
+            <button type="button" id="toggle-token-visibility" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+              <i class="fa-regular fa-eye text-xs"></i>
+            </button>
+          </div>
+          <p class="text-[11px] text-slate-500 mt-1">未輸入金鑰或遇連線限制時，系統將自動以智慧示範引擎評分。</p>
+        </div>
+
+        <div class="flex flex-col justify-end">
+          <div class="bg-indigo-50/70 border border-indigo-100 rounded-lg p-2.5 text-indigo-900 flex items-start gap-2">
+            <i class="fa-solid fa-shield-halved text-indigo-600 mt-0.5"></i>
+            <p class="text-[11px] leading-relaxed">
+              安全保證：Token 絕不硬編碼或傳輸至第三方伺服器。無論本機直接點擊開啟或託管於 Hugging Face Static 空間皆完全免費。
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= 主操作區 Wrapper ================= -->
+  <main id="main-content-wrapper" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- 頂端通知橫幅 -->
+    <div id="banner-alert" class="mb-6 p-4 rounded-xl bg-gradient-to-r from-indigo-500 via-indigo-600 to-blue-600 text-white shadow-md flex items-center justify-between no-print">
+      <div class="flex items-center space-x-3">
+        <div class="w-9 h-9 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
+          <i class="fa-solid fa-compass-drafting text-lg"></i>
+        </div>
+        <div>
+          <h2 class="font-bold text-sm tracking-wide">設計思考（Design Thinking）五大階段融合智能評量</h2>
+          <p class="text-xs text-indigo-100 mt-0.5">
+            以「同理心」、「定義問題」、「發想構想」、「原型製作」四大指標進行多維度綜合診斷，引導學生思維迭代與專題落地。
+          </p>
+        </div>
+      </div>
+      <div class="hidden sm:flex items-center gap-2">
+        <span class="text-xs bg-white/20 px-3 py-1 rounded-full text-indigo-50 font-medium">
+          <i class="fa-solid fa-check mr-1"></i>A4 評量表輸出
+        </span>
+        <span class="text-xs bg-white/20 px-3 py-1 rounded-full text-indigo-50 font-medium">
+          <i class="fa-solid fa-waveform-lines mr-1"></i>雙軌推論
+        </span>
+      </div>
+    </div>
+
+    <!-- 主要兩欄排版 -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      <!-- ================= 左欄：學習單輸入、上傳與案例載入 (5 欄寬) ================= -->
+      <section class="lg:col-span-5 space-y-6 no-print">
+
+        <!-- 1. 範例快速載入 -->
+        <div class="glass-card rounded-2xl p-5 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+              <i class="fa-solid fa-wand-magic-sparkles text-indigo-600"></i>
+              一鍵載入經典創客範例
+            </h3>
+            <span class="text-xs text-slate-400">點選立即體驗</span>
+          </div>
+          <div class="grid grid-cols-3 gap-2">
+            <button type="button" data-preset="umbrella" class="preset-btn px-2.5 py-2.5 rounded-xl border border-indigo-200 bg-indigo-50/50 hover:bg-indigo-100 text-indigo-800 transition text-center group">
+              <i class="fa-solid fa-umbrella text-indigo-600 text-base mb-1 block group-hover:scale-110 transition-transform"></i>
+              <span class="text-xs font-bold block">折疊智慧傘</span>
+              <span class="text-[10px] text-slate-500 block">生活防漏/防丟</span>
+            </button>
+
+            <button type="button" data-preset="waterer" class="preset-btn px-2.5 py-2.5 rounded-xl border border-emerald-200 bg-emerald-50/50 hover:bg-emerald-100 text-emerald-800 transition text-center group">
+              <i class="fa-solid fa-seedling text-emerald-600 text-base mb-1 block group-hover:scale-110 transition-transform"></i>
+              <span class="text-xs font-bold block">自動澆水器</span>
+              <span class="text-[10px] text-slate-500 block">物聯網智慧植栽</span>
+            </button>
+
+            <button type="button" data-preset="backpack" class="preset-btn px-2.5 py-2.5 rounded-xl border border-amber-200 bg-amber-50/50 hover:bg-amber-100 text-amber-800 transition text-center group">
+              <i class="fa-solid fa-backpack text-amber-600 text-base mb-1 block group-hover:scale-110 transition-transform"></i>
+              <span class="text-xs font-bold block">減壓護脊書包</span>
+              <span class="text-[10px] text-slate-500 block">人體工學懸浮</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. 學習單圖片上傳與預覽 -->
+        <div class="glass-card rounded-2xl p-5 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+              <i class="fa-solid fa-image text-indigo-600"></i>
+              學習單影像與手繪草圖預覽
+            </h3>
+            <label for="image-upload-input" class="cursor-pointer text-xs font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
+              <i class="fa-solid fa-cloud-arrow-up"></i>
+              <span>選取或拍照</span>
+            </label>
+            <input type="file" id="image-upload-input" accept="image/*" class="hidden">
+          </div>
+
+          <!-- 預覽容器 -->
+          <div id="drop-zone" class="border-2 border-dashed border-slate-300 hover:border-indigo-400 bg-slate-50/60 rounded-xl preview-container transition cursor-pointer relative group">
+            <div id="upload-placeholder" class="text-center p-6">
+              <div class="w-12 h-12 rounded-full bg-indigo-100 text-indigo-600 mx-auto flex items-center justify-center mb-2 group-hover:scale-105 transition">
+                <i class="fa-solid fa-camera-retro text-xl"></i>
+              </div>
+              <p class="text-xs font-semibold text-slate-700">拖曳或點選上傳學習單 / 原型草圖</p>
+              <p class="text-[11px] text-slate-400 mt-1">支援 JPG、PNG、WebP 或手機拍照截圖</p>
+            </div>
+            <img id="image-preview" src="" alt="學習單預覽" class="hidden max-h-56 w-auto object-contain rounded-lg p-2">
+            <button id="clear-image-btn" class="hidden absolute top-3 right-3 bg-red-500 hover:bg-red-600 text-white rounded-full w-7 h-7 flex items-center justify-center text-xs shadow-md transition">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- 3. 學習單文字填寫與編輯區 -->
+        <div class="glass-card rounded-2xl p-5 shadow-sm space-y-3.5">
+          <div class="flex items-center justify-between border-b border-slate-200/80 pb-2">
+            <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+              <i class="fa-solid fa-file-pen text-indigo-600"></i>
+              學習單文字與思考脈絡
+            </h3>
+            <span class="text-[11px] text-slate-400">可自由增修調整</span>
+          </div>
+
+          <!-- 學生與專題基本資料 -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">學生/團隊姓名</label>
+              <input type="text" id="input-student-name" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="例如：林小晴">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">專案主題名稱</label>
+              <input type="text" id="input-project-title" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="例如：折疊智慧傘">
+            </div>
+          </div>
+
+          <!-- 四階段脈絡文字 -->
+          <div class="space-y-3">
+            <div>
+              <label class="block text-xs font-semibold text-indigo-700 mb-1 flex items-center gap-1.5">
+                <span class="w-4 h-4 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-[10px] font-bold">1</span>
+                同理心痛點需求 (Empathy & Need)
+              </label>
+              <textarea id="input-empathy" rows="2" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="訪談了哪些人？使用者在什麼生活情境下遇到什麼困擾？"></textarea>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-indigo-700 mb-1 flex items-center gap-1.5">
+                <span class="w-4 h-4 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-[10px] font-bold">2</span>
+                觀點問題定義 (POV Definition)
+              </label>
+              <textarea id="input-pov" rows="2" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="[使用者] 需要 [目標/解方]，因為 [深入洞見/核心原因]"></textarea>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-indigo-700 mb-1 flex items-center gap-1.5">
+                <span class="w-4 h-4 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-[10px] font-bold">3</span>
+                構想創意發想 (Ideation & Creativity)
+              </label>
+              <textarea id="input-ideation" rows="2" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="團隊腦力激盪提出了哪些創新的功能或造型解決方案？"></textarea>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-indigo-700 mb-1 flex items-center gap-1.5">
+                <span class="w-4 h-4 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-[10px] font-bold">4</span>
+                原型製作可行性 (Prototyping & Feasibility)
+              </label>
+              <textarea id="input-feasibility" rows="2" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="使用什麼材料/機構/程式？如何進行低成本驗證與測試？"></textarea>
+            </div>
+          </div>
+
+          <!-- 分析啟動按鈕 -->
+          <button id="start-eval-btn" type="button" class="w-full mt-2 py-3 px-4 rounded-xl font-bold text-sm bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white shadow-lg shadow-indigo-200 flex items-center justify-center gap-2 transition-all transform active:scale-95">
+            <i class="fa-solid fa-sparkles"></i>
+            <span>開始 AI 設計思考四維度評量</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- ================= 右欄：動態儀表板、雷達圖、語音講評與教師調分 (7 欄寬) ================= -->
+      <section class="lg:col-span-7 space-y-6">
+
+        <!-- 綜合結果總覽大卡片 -->
+        <div class="glass-card rounded-2xl p-6 shadow-sm border-l-4 border-indigo-600">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-200/80 pb-4">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs uppercase tracking-wider font-bold text-indigo-600">綜合評定診斷結果</span>
+                <span id="current-model-badge" class="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-100 text-slate-600 border border-slate-200">
+                  Qwen/Qwen2.5-VL-7B-Instruct
+                </span>
+              </div>
+              <h2 id="display-project-title" class="text-xl font-extrabold text-slate-900 mt-1">折疊智慧傘</h2>
+              <p class="text-xs text-slate-500">作者 / 研發團隊：<span id="display-student-name" class="font-medium text-slate-700">林小晴</span></p>
+            </div>
+
+            <!-- 總分與等級 -->
+            <div class="flex items-center space-x-3 bg-slate-50 px-4 py-2.5 rounded-xl border border-slate-200 self-stretch sm:self-auto justify-between sm:justify-end">
+              <div class="text-right">
+                <span class="text-[11px] text-slate-500 block">綜合平均總分</span>
+                <div class="flex items-baseline gap-1">
+                  <span id="overall-score-display" class="text-3xl font-black text-indigo-600">88</span>
+                  <span class="text-xs text-slate-400">/ 100</span>
+                </div>
+              </div>
+              <div class="h-9 w-[1px] bg-slate-200"></div>
+              <div>
+                <span class="text-[11px] text-slate-500 block">評等層級</span>
+                <span id="overall-tier-badge" class="tier-badge tier-excellent mt-0.5">
+                  <i class="fa-solid fa-crown text-xs"></i> 卓越等級
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 語音播報與音訊波形視覺化專區 -->
+          <div class="mt-4 bg-slate-900 text-white p-4 rounded-xl shadow-inner no-print">
+            <div class="flex items-center justify-between mb-2.5">
+              <div class="flex items-center gap-2">
+                <i class="fa-solid fa-headset text-indigo-400 text-sm"></i>
+                <span class="text-xs font-bold text-slate-200">AI 導師即時語音講評 (Web Speech API)</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <button id="voice-play-btn" class="px-3 py-1 rounded-lg text-xs font-bold bg-indigo-500 hover:bg-indigo-600 text-white flex items-center gap-1.5 transition">
+                  <i class="fa-solid fa-play"></i> 播放講評
+                </button>
+                <button id="voice-stop-btn" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
+                  <i class="fa-solid fa-stop"></i> 停止
+                </button>
+              </div>
+            </div>
+
+            <!-- Canvas 動態音訊波形 -->
+            <canvas id="waveform-canvas" height="64"></canvas>
+            <p id="voice-status-caption" class="text-[11px] text-indigo-300 mt-2 flex items-center justify-between">
+              <span><i class="fa-solid fa-volume-high mr-1"></i> 就緒中：支援繁體中文 (zh-TW) 語音合成</span>
+              <span id="voice-time-indicator" class="font-mono text-slate-400">00:00</span>
+            </p>
+          </div>
+
+          <!-- 綜合指導評語 -->
+          <div class="mt-4 bg-indigo-50/50 border border-indigo-100 rounded-xl p-3.5">
+            <h4 class="text-xs font-bold text-indigo-900 mb-1 flex items-center gap-1.5">
+              <i class="fa-solid fa-comment-dots text-indigo-600"></i>
+              指導老師 / AI 總結回饋
+            </h4>
+            <p id="summary-comments-text" class="text-xs text-slate-700 leading-relaxed">
+              林小晴同學在此專題展現了非常出色的同理心，能精準洞察通勤族下雨天進室內傘套遺失與滴水問題。構想結合奈米疏水布與藍牙防丟晶片，構想新穎且具備商品化潛力。建議後續原型測試可進一步評估微型電池更換週期與機構耐用度。
+            </p>
+          </div>
+        </div>
+
+        <!-- 雷達圖與分項分數儀表板 -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+
+          <!-- 雷達圖容器 (5 欄) -->
+          <div class="md:col-span-5 glass-card rounded-2xl p-4 shadow-sm flex flex-col justify-between">
+            <div class="flex items-center justify-between border-b border-slate-200/80 pb-2">
+              <h3 class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                <i class="fa-solid fa-chart-radar text-indigo-600"></i>
+                四指標能力雷達圖
+              </h3>
+              <span class="text-[10px] text-slate-400">即時連動</span>
+            </div>
+            <div id="radar-chart-container" class="relative flex-1 flex items-center justify-center py-2">
+              <canvas id="radarChart"></canvas>
+            </div>
+            <div class="text-[10px] text-center text-slate-400 mt-1">
+              標度 0 ~ 100 分 · 反映設計思考各核心向度均衡度
+            </div>
+          </div>
+
+          <!-- 四維度分數與進度條 (7 欄) -->
+          <div class="md:col-span-7 glass-card rounded-2xl p-4 shadow-sm space-y-3.5">
+            <div class="flex items-center justify-between border-b border-slate-200/80 pb-2">
+              <h3 class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                <i class="fa-solid fa-bars-progress text-indigo-600"></i>
+                分項向度評分指標
+              </h3>
+              <span class="text-[10px] text-indigo-600 font-semibold">可直接滑動調分</span>
+            </div>
+
+            <!-- 向度 1: 痛點需求性 -->
+            <div class="space-y-1">
+              <div class="flex justify-between items-center text-xs">
+                <span class="font-semibold text-slate-700 flex items-center gap-1">
+                  🎯 痛點需求性 (Empathy & Need)
+                </span>
+                <div class="flex items-center gap-2">
+                  <span id="badge-empathy" class="tier-badge tier-excellent text-[10px]">卓越</span>
+                  <span id="score-text-empathy" class="font-bold text-indigo-600 font-mono">92</span>
+                </div>
+              </div>
+              <input type="range" id="slider-empathy" min="0" max="100" value="92" class="w-full">
+            </div>
+
+            <!-- 向度 2: 問題定義準確性 -->
+            <div class="space-y-1">
+              <div class="flex justify-between items-center text-xs">
+                <span class="font-semibold text-slate-700 flex items-center gap-1">
+                  🔍 問題定義準確性 (POV Definition)
+                </span>
+                <div class="flex items-center gap-2">
+                  <span id="badge-pov" class="tier-badge tier-excellent text-[10px]">卓越</span>
+                  <span id="score-text-pov" class="font-bold text-indigo-600 font-mono">88</span>
+                </div>
+              </div>
+              <input type="range" id="slider-pov" min="0" max="100" value="88" class="w-full">
+            </div>
+
+            <!-- 向度 3: 想法創意度 -->
+            <div class="space-y-1">
+              <div class="flex justify-between items-center text-xs">
+                <span class="font-semibold text-slate-700 flex items-center gap-1">
+                  💡 想法創意度 (Ideation & Creativity)
+                </span>
+                <div class="flex items-center gap-2">
+                  <span id="badge-ideation" class="tier-badge tier-excellent text-[10px]">卓越</span>
+                  <span id="score-text-ideation" class="font-bold text-indigo-600 font-mono">90</span>
+                </div>
+              </div>
+              <input type="range" id="slider-ideation" min="0" max="100" value="90" class="w-full">
+            </div>
+
+            <!-- 向度 4: 技術可行性 -->
+            <div class="space-y-1">
+              <div class="flex justify-between items-center text-xs">
+                <span class="font-semibold text-slate-700 flex items-center gap-1">
+                  🛠️ 技術可行性 (Feasibility & Prototyping)
+                </span>
+                <div class="flex items-center gap-2">
+                  <span id="badge-feasibility" class="tier-badge tier-good text-[10px]">良好</span>
+                  <span id="score-text-feasibility" class="font-bold text-indigo-600 font-mono">82</span>
+                </div>
+              </div>
+              <input type="range" id="slider-feasibility" min="0" max="100" value="82" class="w-full">
+            </div>
+          </div>
+        </div>
+
+        <!-- 四大維度「優勢肯定」與「進階指導建議」展開卡片 -->
+        <div class="glass-card rounded-2xl p-5 shadow-sm space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-200/80 pb-2">
+            <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+              <i class="fa-solid fa-list-check text-indigo-600"></i>
+              四維度質性評語與鷹架指導
+            </h3>
+            <span class="text-xs text-slate-400">含優勢肯定與進階指導建議</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- 1. 痛點卡片 -->
+            <div class="border border-slate-200 rounded-xl p-3.5 bg-white/70 space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-slate-800">🎯 痛點需求性 (Empathy)</span>
+                <span id="card-badge-empathy" class="tier-badge tier-excellent text-[10px]">卓越</span>
+              </div>
+              <div class="text-[11px] bg-emerald-50/70 border border-emerald-100 p-2 rounded-lg text-emerald-900">
+                <strong class="font-semibold text-emerald-800 block mb-0.5"><i class="fa-solid fa-circle-check text-emerald-600 mr-1"></i>優勢肯定：</strong>
+                <span id="text-strength-empathy">訪談族群清晰，深入探討通勤族尖峰時刻傘套掉落與地面濕滑危險，同理心相當深厚。</span>
+              </div>
+              <div class="text-[11px] bg-blue-50/70 border border-blue-100 p-2 rounded-lg text-blue-900">
+                <strong class="font-semibold text-blue-800 block mb-0.5"><i class="fa-solid fa-lightbulb text-blue-600 mr-1"></i>進階指導建議：</strong>
+                <span id="text-sugg-empathy">可補充問卷調查或不同年齡層（如長者、學童）在開合傘時的手部施力差異數據。</span>
+              </div>
+            </div>
+
+            <!-- 2. POV 問題定義卡片 -->
+            <div class="border border-slate-200 rounded-xl p-3.5 bg-white/70 space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-slate-800">🔍 問題定義準確性 (POV)</span>
+                <span id="card-badge-pov" class="tier-badge tier-excellent text-[10px]">卓越</span>
+              </div>
+              <div class="text-[11px] bg-emerald-50/70 border border-emerald-100 p-2 rounded-lg text-emerald-900">
+                <strong class="font-semibold text-emerald-800 block mb-0.5"><i class="fa-solid fa-circle-check text-emerald-600 mr-1"></i>優勢肯定：</strong>
+                <span id="text-strength-pov">觀點陳述聚焦明確，成功串連「室內防滴水」與「出門防遺忘」兩大關鍵隱性需求。</span>
+              </div>
+              <div class="text-[11px] bg-blue-50/70 border border-blue-100 p-2 rounded-lg text-blue-900">
+                <strong class="font-semibold text-blue-800 block mb-0.5"><i class="fa-solid fa-lightbulb text-blue-600 mr-1"></i>進階指導建議：</strong>
+                <span id="text-sugg-pov">嘗試運用「How Might We (我們如何能...)」句型將問題細分成兩至三個子挑戰。</span>
+              </div>
+            </div>
+
+            <!-- 3. 創意發想卡片 -->
+            <div class="border border-slate-200 rounded-xl p-3.5 bg-white/70 space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-slate-800">💡 想法創意度 (Ideation)</span>
+                <span id="card-badge-ideation" class="tier-badge tier-excellent text-[10px]">卓越</span>
+              </div>
+              <div class="text-[11px] bg-emerald-50/70 border border-emerald-100 p-2 rounded-lg text-emerald-900">
+                <strong class="font-semibold text-emerald-800 block mb-0.5"><i class="fa-solid fa-circle-check text-emerald-600 mr-1"></i>優勢肯定：</strong>
+                <span id="text-strength-ideation">將奈米疏水布料搭配手搖離心收傘機構，跳脫傳統一次性塑膠傘套思維，深具環保與創意價值。</span>
+              </div>
+              <div class="text-[11px] bg-blue-50/70 border border-blue-100 p-2 rounded-lg text-blue-900">
+                <strong class="font-semibold text-blue-800 block mb-0.5"><i class="fa-solid fa-lightbulb text-blue-600 mr-1"></i>進階指導建議：</strong>
+                <span id="text-sugg-ideation">可探討在傘骨反光夜間辨識、握把人體工學掛扣上做出更多造形突破。</span>
+              </div>
+            </div>
+
+            <!-- 4. 技術可行性卡片 -->
+            <div class="border border-slate-200 rounded-xl p-3.5 bg-white/70 space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-slate-800">🛠️ 技術可行性 (Feasibility)</span>
+                <span id="card-badge-feasibility" class="tier-badge tier-good text-[10px]">良好</span>
+              </div>
+              <div class="text-[11px] bg-emerald-50/70 border border-emerald-100 p-2 rounded-lg text-emerald-900">
+                <strong class="font-semibold text-emerald-800 block mb-0.5"><i class="fa-solid fa-circle-check text-emerald-600 mr-1"></i>優勢肯定：</strong>
+                <span id="text-strength-feasibility">選材符合生活可行標準，3D 列印機構與低功耗藍牙晶片整合性佳，原型易於快速疊代。</span>
+              </div>
+              <div class="text-[11px] bg-blue-50/70 border border-blue-100 p-2 rounded-lg text-blue-900">
+                <strong class="font-semibold text-blue-800 block mb-0.5"><i class="fa-solid fa-lightbulb text-blue-600 mr-1"></i>進階指導建議：</strong>
+                <span id="text-sugg-feasibility">需留意電子零件防水等級 (IPX4 以上) 以及強風環境下的傘骨抗風壓測試。</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 匯出與列印動作按鈕區 -->
+        <div id="action-buttons" class="flex flex-wrap items-center justify-between gap-3 no-print">
+          <div class="text-xs text-slate-500">
+            <i class="fa-solid fa-circle-info text-indigo-500 mr-1"></i>
+            可直接列印或另存為 A4 PDF 檢核成果表
+          </div>
+          <div class="flex items-center gap-3">
+            <button id="reset-data-btn" class="px-4 py-2 rounded-xl text-xs font-medium text-slate-600 bg-white hover:bg-slate-100 border border-slate-300 transition">
+              <i class="fa-solid fa-rotate-left mr-1"></i> 重設預設值
+            </button>
+            <button id="print-a4-btn" class="px-5 py-2.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-200 transition flex items-center gap-2">
+              <i class="fa-solid fa-print"></i>
+              <span>一鍵列印 / 匯出 A4 學生學習檢核卡</span>
+            </button>
+          </div>
+        </div>
+
+      </section>
+    </div>
+
+    <!-- ================= 專屬 A4 列印檢核卡區域 (Print Only or Dedicated Modal Preview) ================= -->
+    <div id="printable-report" class="hidden my-8 bg-white text-slate-900 border-2 border-slate-800 p-8 rounded-xl max-w-4xl mx-auto">
+      <!-- 抬頭與檢核卡標題 -->
+      <div class="print-header-border flex justify-between items-center pb-4 mb-4">
+        <div>
+          <span class="text-xs font-bold tracking-widest text-indigo-800 uppercase block">DESIGN THINKING LEARNING RUBRIC</span>
+          <h2 class="text-2xl font-black text-slate-900">設計思考專題探究與實作 · 學生學習檢核卡</h2>
+          <p class="text-xs text-slate-600 mt-1">依據 108 課綱探究精神與設計思考（Design Thinking）四大向度能力指標進行綜合評核</p>
+        </div>
+        <div class="text-right">
+          <div class="border-2 border-indigo-700 rounded-lg px-3 py-1.5 text-center">
+            <span class="text-[10px] text-slate-500 block">綜合評定</span>
+            <span id="print-overall-score" class="text-2xl font-black text-indigo-700">88 分</span>
+            <span id="print-overall-tier" class="block text-xs font-bold text-emerald-700">卓越等級</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 學生與專案資訊列 -->
+      <div class="grid grid-cols-4 gap-4 p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs mb-4">
+        <div><strong class="text-slate-500">學生/組員：</strong><span id="print-student-name" class="font-bold text-slate-800">林小晴</span></div>
+        <div><strong class="text-slate-500">專題主題：</strong><span id="print-project-title" class="font-bold text-slate-800">折疊智慧傘</span></div>
+        <div><strong class="text-slate-500">評核日期：</strong><span id="print-eval-date" class="font-medium text-slate-800">2026/11/20</span></div>
+        <div><strong class="text-slate-500">評量系統：</strong><span id="print-model-used" class="font-mono text-slate-800">Qwen2.5-VL</span></div>
+      </div>
+
+      <!-- 四大維度成績與質性回饋表格 -->
+      <table class="print-dimension-table mb-4">
+        <thead>
+          <tr>
+            <th style="width: 22%;">評量向度</th>
+            <th style="width: 12%; text-align: center;">得分</th>
+            <th style="width: 14%; text-align: center;">評定層級</th>
+            <th style="width: 26%;">優勢肯定</th>
+            <th style="width: 26%;">進階指導建議</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="font-bold">🎯 痛點需求性<br><span class="text-[10px] font-normal text-slate-500">Empathy & Need</span></td>
+            <td id="print-score-empathy" class="text-center font-bold text-base text-indigo-700">92</td>
+            <td id="print-tier-empathy" class="text-center font-bold text-emerald-700">卓越</td>
+            <td id="print-str-empathy" class="text-xs">訪談族群清晰，深入探討通勤族尖峰時刻傘套掉落與地面濕滑危險，同理心相當深厚。</td>
+            <td id="print-sug-empathy" class="text-xs">可補充問卷調查或不同年齡層在開合傘時的手部施力差異數據。</td>
+          </tr>
+          <tr>
+            <td class="font-bold">🔍 問題定義準確性<br><span class="text-[10px] font-normal text-slate-500">POV Definition</span></td>
+            <td id="print-score-pov" class="text-center font-bold text-base text-indigo-700">88</td>
+            <td id="print-tier-pov" class="text-center font-bold text-emerald-700">卓越</td>
+            <td id="print-str-pov" class="text-xs">觀點陳述聚焦明確，成功串連「室內防滴水」與「出門防遺忘」兩大關鍵隱性需求。</td>
+            <td id="print-sug-pov" class="text-xs">嘗試運用「How Might We」句型將問題細分成兩至三個子挑戰。</td>
+          </tr>
+          <tr>
+            <td class="font-bold">💡 想法創意度<br><span class="text-[10px] font-normal text-slate-500">Ideation & Creativity</span></td>
+            <td id="print-score-ideation" class="text-center font-bold text-base text-indigo-700">90</td>
+            <td id="print-tier-ideation" class="text-center font-bold text-emerald-700">卓越</td>
+            <td id="print-str-ideation" class="text-xs">將奈米疏水布料搭配手搖離心收傘機構，跳脫傳統一次性塑膠傘套思維，深具環保與創意價值。</td>
+            <td id="print-sug-ideation" class="text-xs">可探討在傘骨反光夜間辨識、握把人體工學掛扣上做出更多造形突破。</td>
+          </tr>
+          <tr>
+            <td class="font-bold">🛠️ 技術可行性<br><span class="text-[10px] font-normal text-slate-500">Feasibility & Prototype</span></td>
+            <td id="print-score-feasibility" class="text-center font-bold text-base text-indigo-700">82</td>
+            <td id="print-tier-feasibility" class="text-center font-bold text-blue-700">良好</td>
+            <td id="print-str-feasibility" class="text-xs">選材符合生活可行標準，3D 列印機構與低功耗藍牙晶片整合性佳，原型易於快速疊代。</td>
+            <td id="print-sug-feasibility" class="text-xs">需留意電子零件防水等級 (IPX4 以上) 以及強風環境下的傘骨抗風壓測試。</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- 總結評語與指導簽名 -->
+      <div class="grid grid-cols-12 gap-4 mt-3">
+        <div class="col-span-8 p-3 border border-slate-200 rounded-lg bg-slate-50">
+          <strong class="text-xs font-bold text-slate-800 block mb-1">指導教師綜合講評與期勉：</strong>
+          <p id="print-summary-comment" class="text-xs text-slate-700 leading-relaxed">
+            林小晴同學在此專題展現了非常出色的同理心，能精準洞察通勤族下雨天進室內傘套遺失與滴水問題。構想結合奈米疏水布與藍牙防丟晶片，構想新穎且具備商品化潛力。建議後續原型測試可進一步評估微型電池更換週期與機構耐用度。
+          </p>
+        </div>
+        <div class="col-span-4 p-3 border border-slate-200 rounded-lg flex flex-col justify-between">
+          <div>
+            <strong class="text-xs font-bold text-slate-800 block mb-1">指導教師簽名 / 認證章：</strong>
+            <div class="h-12 border-b border-dashed border-slate-400 mt-2"></div>
+          </div>
+          <div class="text-[10px] text-slate-400 text-right mt-1">
+            印製代碼：DTM-2026-SP2
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ================= 頁尾 Footer ================= -->
+  <footer class="mt-12 border-t border-slate-200 bg-white py-6 text-center text-xs text-slate-500 no-print">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div class="flex items-center gap-2">
+        <span class="font-bold text-slate-700">💡 設計思考我最行 (Design Thinking Master)</span>
+        <span>· 第二個 Hugging Face Static Space 作業</span>
+      </div>
+      <div>
+        <span>支援雙模態推論 · Web Speech 語音合成 · A4 報表匯出</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- 應用程式邏輯程式碼 -->
+  <script src="app.js"></script>
+</body>
 </html>

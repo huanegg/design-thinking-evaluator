@@ -475,6 +475,25 @@ function bindEvents() {
     showNotification('已重設為經典範例【折疊智慧傘】', 'info');
   });
 
+  // Space 倉庫連結設定
+  const savedSpaceUrl = localStorage.getItem('dtm_space_url');
+  if (savedSpaceUrl && DOM.spaceRepoLink) {
+    DOM.spaceRepoLink.href = savedSpaceUrl;
+  }
+  if (DOM.spaceRepoLink) {
+    DOM.spaceRepoLink.addEventListener('click', (e) => {
+      if (!DOM.spaceRepoLink.href || DOM.spaceRepoLink.getAttribute('href') === '#' || DOM.spaceRepoLink.getAttribute('href').endsWith('#')) {
+        e.preventDefault();
+        const inputUrl = prompt('請輸入您的第二個 Hugging Face Space 網址：\n(例如：https://huggingface.co/spaces/您的帳號/專案名稱)');
+        if (inputUrl && inputUrl.trim().startsWith('http')) {
+          localStorage.setItem('dtm_space_url', inputUrl.trim());
+          DOM.spaceRepoLink.href = inputUrl.trim();
+          window.open(inputUrl.trim(), '_blank');
+        }
+      }
+    });
+  }
+
   // 一鍵列印 A4
   DOM.printA4Btn.addEventListener('click', () => {
     window.print();
